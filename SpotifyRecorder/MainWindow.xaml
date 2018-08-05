@@ -9,6 +9,10 @@
     <Grid>
         <Button x:Name="btnStart" Content="Start" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="btnStart_Click"/>
         <Button x:Name="btnStop" Content="Stop" HorizontalAlignment="Left" Margin="100,10,0,0" VerticalAlignment="Top" Width="75" Click="btnStop_Click" IsEnabled="False"/>
+        <WebBrowser x:Name="browser" Margin="10,99,10,10"/>
+        <Button x:Name="btnConnect" Content="Authorize" HorizontalAlignment="Left" Margin="10,74,0,0" VerticalAlignment="Top" Width="75" Click="btnConnect_Click"/>
+        <Button x:Name="btnGetCurrentTrack" Content="Get Track" HorizontalAlignment="Left" Margin="100,74,0,0" VerticalAlignment="Top" Width="75" Click="btnGetCurrentTrack_Click"/>
+        <Label x:Name="labelTrackName" Content="Label" HorizontalAlignment="Left" Margin="311,41,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
