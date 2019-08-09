@@ -11,12 +11,13 @@ namespace SpotifyRecorder.src
         private WasapiLoopbackCapture capture;
         private WaveFileWriter writer;
         string outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "NAudio");
-        string outputFileName = "recorded";
+        public string outputFileName { get; set; }
         string outputFilePathWav => Path.Combine(outputFolder, $"{outputFileName}.wav");
         string outputFilePathMP3 => Path.Combine(outputFolder, $"{outputFileName}.mp3");
 
-        public void StartRecording()
+        public void StartRecording(string outputFileName)
         {
+            this.outputFileName = outputFileName;
             Directory.CreateDirectory(outputFolder);
 
             capture = new WasapiLoopbackCapture();
@@ -31,6 +32,7 @@ namespace SpotifyRecorder.src
             };
             capture.RecordingStopped += (s, a) =>
             {
+                // TODO dispose before new writer...
                 writer.Dispose();
                 writer = null;
                 capture.Dispose();
@@ -40,22 +42,24 @@ namespace SpotifyRecorder.src
             {
                 while (capture.CaptureState != NAudio.CoreAudioApi.CaptureState.Stopped)
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(10);
                 }
             }).Start();
         }
 
         public void StopRecording()
         {
+            var outWavFileName = outputFilePathWav;
+            var outMp3FileName = outputFilePathMP3;
             capture?.StopRecording();
             new Thread(() =>
             {
                 // TODO check if file is in use
                 while (writer != null)
                 {
-                    Thread.Sleep(50);
+                    Thread.Sleep(15);
                 }
-                WaveToMP3(outputFilePathWav, outputFilePathMP3);
+                WaveToMP3(outWavFileName, outMp3FileName);
             }).Start();
         }
 

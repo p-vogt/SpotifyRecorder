@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using SpotifyRecorder.src;
 using System;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
 
@@ -16,8 +16,7 @@ namespace SpotifyRecorder
     {
         AudioRecorder recorder = new AudioRecorder();
         string accessToken = "";
-
-
+        string displayTrackName = "";
         public MainWindow()
         {
             InitializeComponent();
@@ -26,7 +25,7 @@ namespace SpotifyRecorder
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
             btnStart.IsEnabled = false;
-            recorder.StartRecording();
+            recorder.StartRecording(displayTrackName);
             btnStop.IsEnabled = true;
 
         }
@@ -43,6 +42,7 @@ namespace SpotifyRecorder
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
+            //TODO config
             var clientID = File.ReadAllText("config.txt");
             var spotifyURL = "https://accounts.spotify.com/authorize";
             var redirectURI = "http://localhost:8888/callback";
@@ -85,7 +85,7 @@ namespace SpotifyRecorder
             currentTrackRequest.Headers.Add("Authorization", "Bearer " + accessToken);
             currentTrackRequest.Method = "GET";
             currentTrackRequest.BeginGetResponse(GetResponseCallback, currentTrackRequest);
-           
+
         }
 
         private void GetResponseCallback(IAsyncResult ar)
@@ -101,9 +101,9 @@ namespace SpotifyRecorder
             response.Close();
             dynamic result = JObject.Parse(responseString);
             string trackname = result.item.name.Value;
-            int progress_ms = (int)result.progress_ms.Value;
-            int duration_ms = (int) (result.item.duration_ms.Value);
-            int remaining_ms = duration_ms - progress_ms;
+            var progress_ms = (int)result.progress_ms.Value;
+            var duration_ms = (int)(result.item.duration_ms.Value);
+            var remaining_ms = duration_ms - progress_ms;
 
             dynamic artists = result.item.artists;
             var artistsString = "";
@@ -112,10 +112,22 @@ namespace SpotifyRecorder
                 artistsString += artist.name.Value + ", ";
             }
             artistsString = artistsString.Substring(0, artistsString.Length - 3); // remove last ", "
-
+            displayTrackName = artistsString + " - " + trackname;
             Dispatcher.Invoke(() =>
             {
-                labelTrackName.Content = artistsString + " - " + trackname;
+                labelTrackName.Content = displayTrackName;
+            });
+
+            var task = Task.Run(async () =>
+            {
+                await Task.Delay(remaining_ms);
+                Dispatcher.Invoke(() =>
+                {
+                    recorder.StopRecording();
+                    recorder.outputFileName = displayTrackName;
+                    recorder.StartRecording(displayTrackName);
+                });
+
             });
         }
     }
